@@ -1,0 +1,95 @@
+
+Feature Selection:
+    Use statistics to identify important features of GSI systems
+    Examine several models that filter out non-important features
+    Establish trust-worthiness of individual model feature selections by testing accuracy of model on test set
+    Establish confidence in final feature selection by combining results of trust-worthy models
+What type of analysis are we doing?
+    observational study: no experimental design
+    non-random selection of samples -> not generalizable
+    non-random assignment of treatments -> no causality
+    unbalanced replicates: treatments do not have equal number of replicates 
+        -> Type I ANOVA will give different results depending on the order of the model terms,
+        so we must consider using Type II or Type III
+        -balanced replicates are needed for accurate grand mean, if unequal sizes, then the grand mean 
+        won't be effected equally by all of the treatment groups
+Models:
+    Linear models
+        Discrete, all or nothing models:
+            Step-wise model
+            Best subset model
+        Continuous, shrinkage models:
+            lasso regression
+            ridge regression
+            elastic net regression
+    Non-linear models:
+        Random forests
+        Neural nets
+Linear model of categorical variables
+    Factorial design:
+        We don't know which effects are important, so we must consider all of them in the model
+        if interaction terms are insignificant, drop them and rerun the model
+    Omnibus test: identify main and interaction effects that are statistically significant
+        ANOVA
+    Posthoc test: among significant factors, which factor levels are significantly different?
+        Tukey honest significant difference test
+        or
+        Pairwise T-tests with Bonferroni Type I error correction
+    Linear model assumptions:
+        Assumptions on response:
+            unit treatment additivity: 
+                Y|A=a_i, B=b_j ~ N(mu + alpha_i + beta_j, sigma^2)
+                ie., 
+                Y_k = mu + alpha_i + beta_j + e_ijk, where e_ijk ~ N(0, sigma^2)
+            implies error variance is constant over all factors A, B, and observations
+            every treatment t has the same effect on all experimental units
+        Assumptions on samples
+            Balanced cells: equal number of replicates for all treatments
+            independent replicates: replicates are not correlated with one another
+        Assumptions on error term
+            e_ijk ~ N(0, sigma^2)
+            residuals are estimators of error terms. They are random variables, that depend on x
+            and need to be studentized in order to compare to one another --> studentized residuals
+            After studentizing, you can check assumptions. If assumptions are not met, transform the response variable
+            If residuals cannot be made approximately normal, consider using a generalized linear model
+            -check homogeneity-of-variance/homoscedasticity.
+                graphical:
+                    scatter plot of studentized residuals: should see no pattern, centered around zero
+                statistical:
+                    barlett-test
+                    fligner.test
+                    levene.test
+            -check normality
+                graphical:
+                    qqplot of studentized residuals
+                statistical:
+                    shaprio-wilks test (R: shapiro.test)
+    Coding categorical variables in linear model impacts interpretation
+        dummy coding
+        effect coding
+        Fixed-effects model
+        Cell means model
+    ANOVA hypothesis testing
+        What is ANOVA doing?
+        F-Test
+        Type I Sum of Squares
+        Type II Sum of Squares
+        Type III Sum of Squares
+    All-or-nothing models shortcomings:
+        Step-wise model
+        Best-subset model
+    Why shrinkage models?
+        LASSO
+        Ridge
+        Elastic net
+    Post-hoc testing:
+        Pairwise t-tests
+        Family wise error rate
+        Bonferroni correction
+        Tukey Honest Signifcant Difference
+Non-linear models
+    Random forest
+        Benefits
+    Neural nets
+        Benefits
+        

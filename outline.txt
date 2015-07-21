@@ -1,0 +1,30 @@
+Type of Study
+
+    observational, prospective. Can only establish association
+    
+    no random sampling: sites not randomly selected
+        not generalizable
+    no random assignment: treatments are not randomly assigned to sites
+        no causal inference
+    unbalanced
+        unequal number of replicates for each treatment
+
+Linear model
+
+    Assumptions on response:
+        unit treatment additivity
+        Y|A=a_i, B=b_j ~ N(mu + alpha_i + beta_j, sigma^2)
+    Assumptions on samples
+        Balanced cells
+        independent replicates
+    Assumptions on error term
+        e_ijk ~ N(0, sigma^2)
+            check homogeneity of variance
+                graphical:
+                    
+                statistical:
+                    
+            check normality
+                qqplot of studentized residuals
+
+

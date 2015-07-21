@@ -1,0 +1,69 @@
+---
+title: "Untitled"
+author: "Matthew Plourde"
+date: "Friday, July 17, 2015"
+output: ioslides_presentation
+---
+
+Make sure the error attributed to factor A is greater than the naturally occuring variability
+
+
+## Error Decomposition
+Factor A: $$a_1, ..., a_{|A|}$$
+Factor B: $$b_1, ..., b_{|B|}$$
+$$N$$ observatiosnglm
+
+Cell means model: 
+
+$$Y_{ijk} = \mu_{ij} + \epsilon_{ijk}$$
+$$\epsilon ~ N(0, \sigma^2)$$
+equivalent to 
+no-intercept regression model with indicator variables for levels, cooefficients are the means of each level
+
+
+Effects model:
+
+$$Y_{ijk} = \mu + \alpha_i + \beta_j + \epsilon_{ijk}$$
+
+omnibus test
+
+When you do dummy coding with multiple factors in regression, you are treating one level of all factors
+as a baseline (in the intercept term). Using effect coding gives the intercept as the grand mean
+
+# effect coding with sum contrasts
+lm(a ~ b, x, contrasts = list(b = contr.sum))
+intercept is the grand mean, slopes are the the difference between the level means and the grand mean
+
+use lm(a ~ b, x, contrasts = list(b = contr.treatment))
+
+
+in dummy coding:
+
+  mean_level1 = Beta0
+  mean_level2 = Beta0 + Beta1
+  mean_level3 = Beta0 + Beta2
+  
+in effects coding
+
+  mean_level1 = Beta0 + Beta1
+  mean_level2 = Beta9 + Beta2
+  mean_level3= Beta0 - Beta1 - Beta2
+
+
+F-distribution
+  X = (U1/d1) / (U2/d2) 
+  where U1 and U2 are chi-squared distributions with d1 and d2 degrees of freedom, respectively
+  
+  chi-squared random variable with k degrees of freedom is the sum of the squares of k independent
+  standard normal random variables
+
+
+ANOVA is an omnibus test
+
+
+
+$$Y_{ij} = f(a_i, b_i) + \epsilon_{ij}$$
+
+
+$$\sum_{l=1}^{N} (y_l - \bar{Y})$$
+$$\sum_{i=1}^{a} \sum_{j=1}^{b} \sum_{k=1}^{reps(i, j)} (y_{ijk} - \bar{Y})$$

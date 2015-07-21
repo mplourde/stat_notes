@@ -1,0 +1,80 @@
+"The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be
+extracted from a given body of data." --John Tukey
+
+"... perhaps the most serious source of error lies in letting statistical procedures make decisions for you."
+"Don't be too quick to turn on the computer. Bypassing the brain to compute by reflex is a sure recipe for disaster."
+Good and Hardin, Common Errors in Statistics
+
+
+# Statistical Feature Selection
+
+Given a continuous response variable Y (e.g., recession rate, VPR), p categorical features (e.g., landuse, loading ratio,
+inlet type), and a set of N independent observations of Y, we want to identify l <= p features that have an important
+effect on the value of Y. This process is called feature selection. One
+way to approach this problem is to build a statistical model that provides significance scores for each feature. 
+We would then use statistical significance as our measure of importance and select only those features that are 
+highly significant according to some threshold. A more robust approach would be to build several models 
+that provide independent importance rankings of the features, then weight the models by their predictive accuracy and use this 
+combined information to inform an educated human decision about which features should ultimately be chosen. Evaluating
+a model's predictive accuracy is a way to establish the trust-worthiness of its feature ranking. We determine model's
+trust-worthiness by first training the model on
+only a subset of the data and then evaluating its predictive accuracy on the other part. If several trust-worthy models select the same features, then we can be confident that these features 
+are indeed important. In this
+document, I will describe several statistical models that can be used toward this end, their relative merits, and the nuances involved in applying these models to particular data situations.
+
+# What type of analysis are we performing?
+
+Any statistical analysis of the GSI monitoring data will constitute an observational study. The monitored GSI systems were not
+randomly selected from all possible GSI systems in the Philadelphia area nor were the levels of the features randomly assigned to the 
+systems chosen.  This limits the 
+scope of what can be inferred from any analysis using this data. Without randomly
+selecting systems from all possible systems, the statistics alone will not allow us to generalize the results to all GSI
+systems in Philadelphia. Moreover, because the feature levels were not randomly assigned to the sampled systems, we cannot rule out
+the existence of systematic confounding factors, and thus cannot conclude that such-and-such feature *causes* this
+effect in our response variable. The most that can be establish is association. Using these associations as evidence,
+the engineer may then want to provide a non-statistical explanation to make claims about generalizability or causality. 
+
+
+# Linear models for feature selection
+
+## Discreate, all-or-nothing models
+
+### Step-wise 
+
+The `step` function in R implements stepwise variable elimination using the Akaike Information Criterion (AIC). 
+Given a set of available models, the preferred model is the one with the lowest AIC. At each stage in the optimal model search, 
+`step` adds and deletes variables from the model with the aim to minimize the AIC. You stop when you can no longer lower
+the AIC, or reach the max number of iterations. AIC penalizes adding terms to the model in order to avoid overfitting 
+the data.
+
+For small sample sizes, you should uses AICc (sample size / num params < ~40)
+
+    1. Variables are either included in the model or not. There is no inbetween. Because of this, the effects 
+    of the chosen variables may be over estimated. Loses valuable predictive information in excluded variables.
+    2. The validity of the resulting p-values is questionable, because there is multiple testing occuring. Removal
+    of less significant predictors tends to increase the significance of others, leading to an over statement
+    of the chosen predictors.
+
+The p-values used should not be treated too literally. There is so much multiple testing occurring that
+the validity is dubious. The removal of less significant predictors tends to increase the significance of
+the remaining predictors. This effect leads one to overstate the importance of the remaining predictors.
+    1. bias in parameter estimation
+    2. inconsistency among model selection algorithms
+    3. inherent problem of multiple hypothesis testing
+    http://onlinelibrary.wiley.com/doi/10.1111/j.1365-2656.2006.01141.x/pdf
+
+    1. Stepwise methods will not necessarily produce the best model if there are redundant predictors (common problem).
+    2. Models identified by stepwise methods have an inflated risk of capitalizing on chance features of the data. 
+    They often fail when applied to new datasets. They are rarely tested in this way.
+    3. It yields R-squared values that are badly biased to be high.
+    4. The F and chi-squared tests quoted next to each variable on the printout do not have the claimed distribution.
+    5. It yields p-values that do not have the proper meaning, and the proper correction for them is a difficult problem.
+    6. It has severe problems in the presence of collinearity.
+    http://www.stata.com/support/faqs/statistics/stepwise-regression-problems/
+
+
+
+    sequence of F-tests, t-tests, R-squared comparison, AIC, BIC, Mallows Cp, PRESS, false discovery rate
+
+
+

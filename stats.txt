@@ -1,0 +1,334 @@
+glmnet tweak parameters: 
+    family (use gaussian for continuous)
+    alpha
+
+
+Why GLM?
+
+General linear models model continuous variables using both continuous and discrete explanatory variables. These models 
+require the following assumptions:
+
+    1) Independence of data points
+    2) Correct distribution of residuals (normal)
+    3) Correct specification of variance structure (homogenous)
+    4) Linear relationship between response and predictors
+
+
+Ridge regression
+    L2 penalty on non-bias parameters
+    lambda_2 * Sum_j=1_p(|Beta_j|^2)
+    as the lambda_2 increases, all parameters are reduced while still remaining non-zero
+
+LASSO
+    L1 penalty on non-bias parameters
+    lambda_1 * Sum_j=1_p(|Beta_j|)
+    increasing lambda_1 drives more and more of the parameters to zero, deselecting features from the regression
+    using L1 penalty in the "large p, small n" case, the lasso selects at most n variables before it saturates.
+    if there is a group of highly correlated variables, then the LASSO tends to select one variable from
+        the group and ignore the others
+
+Elastic net
+    both L1 and L2 penalties
+    naive version find an estimate in a two stage procedure: first for each fixed lambda_2, it finds
+        the ridge regression coefficients, and then does a LSSO type shrinkage. This incurs a double amount
+        of shrinkage, which leads to increased bias and poor predictions. To improve prediction performance,
+        authors rescale the coefficients of the naive version by mutliplying the estimated coefficients by
+        (1 + lambda_2)
+    lambda_1 part generates a sparse model
+    lambda_2 part removes limitation on number of selected variables, encourages grouping effect, stabilizes
+        the lambda_1 regularization path
+    alpha in glmnet is lambda_2 / (lambda_2 + lambda_1), the elastic net penalty is 
+        alpha * |Beta|^2 + (1-alpha) * |Beta|^1
+
+
+Check for data collinearity
+    get the covariance matrix (cov) then find the eigenvalues of that covariance matrix (eigen(cov(X))$values)
+    if there is any zero, or close to zero eigenvalues, then that means there is collinearity in the 
+    data
+    http://stats.stackexchange.com/questions/158114/how-do-i-use-lasso-and-elastic-net-as-feature-selectors
+
+Subset-selection
+    - selects a model containing a subset of available variables according to a given optimality criterion
+    and requires that one visit all possible models. Infeasible when the dimension is too large.
+    - discrete process that either retains or discards one variable (rather than using shrinkage), 
+    leading to higher variablity than continuous methods, such as ridge.
+
+Step-wise
+    shortcomings: dependence on the path chosen through the variable space and may be inconsistent
+    
+
+What does regression accomplish?
+    traces the average value of a response variable as a function of one or several predictors
+    the object of regression is to estimate the population regression function mu|x1,x2 = f(x1,x2)
+    E[Y|x1, x2] = f(x1, x2) = alpha + beta1 * x1 + beta2 * x2
+    y ~ N(alpha + beta1 * x1 + beta2 * x2, sigma^2)
+    observations are sampled independently, so are are the ys.
+
+
+In the ANOVA, the categorical variable is effect coded, which means that each category’s mean is compared to the grand mean. In the regression, the categorical variable is dummy coded**, which means that each category’s intercept is compared to the reference group’s intercept 
+
+Regression and ANOVA always give exactly the same R2, which measures the extent to which the variation in all the independent variables together explains the variation in the dependent variable (close to 0 percent means only random connection; close to 100 percent means the independent variables explain nearly everything).
+
+This is because ANOVA asks, "How much do differences in category make a difference in result?" and regression asks, "How much does category matter at all?" Both are forms of the same question.
+
+That difference in the null hypothesis is a difference in the actual question the procedure answers. Just remember, regression asks, "Do the categories have an effect?" and ANOVA asks "Is the effect significantly different across categories?"
+
+in a simple regression model, if the predictor can sometimes be 0, then the intercept represents
+the mean value of the response when the predictor is zero. If the predictor is never zero, then the 
+intercept has no meaning. Dummy coded variables have values of 0 for the reference group
+and 1 for the comparison group. When regression includes dummy  variables, then the intercept 
+is the mean only for the reference group. The mean value for the comparison group is the mean value 
+for the reference group plus the coefficient for the comparison group.
+
+
+    Mallow's Cp is equivalent to AIC in the case of gaussian linear regression
+    Cross validation is asymptotically equivalent to the AIC for ordinary linear regression models
+    AIC asympototically optimal in selecting the model with the least mean squared error, under the assumption that 
+    the exact "true" model is not in the candidate
+
+
+caret
+method='lmStepAIC' to get crossvalidated stepAIC
+method='glmStepAIC'
+caret::findCorrelation to identify and eliminate collinear variables
+
+
+ANOVA assumptions
+    - independence, normality, and homogeneity of varainces of the residuals (as a consequence of unit treatment
+      additivity)
+    - response variables are normally distributed, or approximately so. check for normality of response
+    - samples are independent
+    - variances of populations are equal
+    - responses for a given group are independent and identically distributed normal random variables
+    - when randomization-based analysis, homogeneity of varainces of residuals (as a consequence of unit-treatment additivity)
+    - unit treatment additivity: observed response from the experimental unit when receiving 
+    treatment can be written as the sum of the units response yi and the treatment effect tj
+    y_ij = y_i + t_j
+    for every treatment j, the jth treatment has exactly the same effect tj on every experiment unit.
+    implies variance is constant for all treatments
+    - the normal model based ANOVA analysis assumes the independence, normality and homogeneity of the variances of the residuals. 
+    - additive model: no interaction
+    - interaction model: interaction
+    - use interaction plot to determine which interactions to include
+        lines parallel: additive model
+        lines intersect: interaction model
+    - balanced design
+        contingency tensor of all variables (and combinations) with an equal number of subjects in each cell
+    - if p-values of interaction terms are not significant, than re-run the model without the interaction terms
+    - kruskal-wallis is for one-way anova
+    - testing 
+        - normality: use qqplot or shapiro-wilk test (shapiro.test(x))
+        - homogeneity of varainces:
+            - bartlett.test(y~G, data=mydata) (parametric)
+            - fligner.test(y~G, data=mydata) (nonparametric)
+        - homoscedasticity
+            -With small samples, you don't have enough power to detect departures from homoscedascity, while with big samples you have "plenty of power", so you are more likely to screen even trivial departures from equality". 
+        - The distributional assumptions for linear regression and ANOVA are for the distribution of Y|X — that’s Y given X.  You have to take out the effects of all the Xs before you look at the distribution of Y.  As it turns out, the distribution of Y|X is, by definition, the same as the distribution of the residuals.  So the easiest way to check the distribution of Y|X is to save your residuals and check their distribution.
+        - check residuals are normal (qqplot)
+        - check independence: scatterplot of residuals on X
+        - check constant variance: boxplot of residuals by treatments # scatter plot of predicted values on Y
+        - equality of treatment variances (homogeneity of variance): use levene's test, OBrien test, Brown-Forsythe
+          test, Barlett's test
+        - normality is not assessed until problems with variance are corrected. if the variances
+        are unequal, it is highly likely that the distribution of the residuals will look platykurtotic,
+        flatter than expected for a Normal distribution. 
+        - Why you look at residuals: assessing the distribution of Y given X
+        - when the variance across groups are not equal, the usual ANOVA assumptions are not satisfied
+        and the ANOVA F-test is not valid.
+        - balanced data: needed for accurate grand mean, if unequal sizes, then the grand mean 
+        won't be effected equally by all of the treatment groups
+        - When data is unbalanced, there are three different ways to calculate 
+        the sum of squares for ANOVA: Type I, II, II. SS for a factor is the incremental improvement
+        in the error SS as each factor effect is added to model. SS can also be viewed as the residual
+        sum of squares (SSE) obtained by adding that term to a fit that already includes the previous terms
+             - Type I (sequential)
+             SS(A) for factor A
+             SS(B|A) for factor B
+             SS(AB|B,A) for interaction AB
+             Because of the sequential nature and the fact that the two main factors
+             are tested in a particular order, this type of sums of squares will give 
+             different results for unbalanced data depending on which main effect is considered first
+For unbalanced data, this approach tests for a difference in the weighted marginal means. In practical terms, this means that the results are dependent on the realized sample sizes, namely the proportions in the particular data set. In other words, it is testing the first factor without controlling for the other factor
+
+            - Type II
+                SS(A | B) for factor A.
+                SS(B | A) for factor B.
+Note that no significant interaction is assumed (in other words, you should test for interaction first (SS(AB | A, B)) and only if AB is not significant, continue with the analysis for main effects).
+If there is indeed no interaction, then type II is statistically more powerful than type III (see Langsrud [3] for further details).
+
+            - Type III
+                SS(A | B, AB) for factor A.
+                SS(B | A, AB) for factor B.
+           This type tests for the presence of a main effect after the other main effect and interaction. This approach is therefore valid in the presence of significant interactions. 
+
+However, it is often not interesting to interpret a main effect if interactions are present (generally speaking, if a significant interaction is present, the main effects should not be further analysed).
+
+
+    When data is balanced, the factors are orthogonal and types I, II, II give the same results
+
+
+
+
+ANOVA
+    The analysis of variance summarizes how much of the variance in the data 
+    (total sum of squares) is accounted for by the factor effects 
+    (factor sum of squares) and how much is due to random error (residual sum of squares). 
+
+    terminology
+        factorial model
+        interaction
+        treatment, cell
+        replicates
+        balanced/unbalanced
+    model
+        random variable Y|X
+            random drawings;
+            from a fixed distribution;
+            with the distribution having fixed location; and
+            with the distribution having fixed variation.
+
+            response = deterministic component + random component
+            response = constant + error
+
+            constant -> fixed location
+            random component has to have a fixed distribution
+            random component has to have fixed variation
+            data are uncorrelated with each other
+
+            residuals should behave like a univariate process (satisfying these assumptions)
+            
+        model1:
+            Y_ijk = mu_ij + E_ijk
+            Yhat_ijk = muhat_ij
+            R_ijk = Y_ijk - muhat_ij
+        model2:
+            Y_ijk = grand_mean + alpha_i + beta_j + E_ijk
+            Yhat_ijk = grand_mean_hat + alphahat_i + betahat_j
+            R_ijk = Y_ijk - grand_mean_hat - alphahat_i - betahat_j
+        
+        Error decomposition:
+            SS_total = SS_treatments(cells) + SS_error
+
+            Factors A (with a levels), factor B (with b levels)
+
+            Sum_i=1_a Sum_j=1_b Sum_k=1_reps(A,B) (Y_ijk - GrandMean)^2
+            
+            sum of squared difference of each response with grand mean = 
+                for each factor (consituent)
+                    for each level
+                        squared difference of response and grand mean
+                        weighted by number 
+                        
+
+
+            sum of squared difference of each response with grand mean = 
+                #factor1-level1-replicates * squared difference between factor1-level1 mean and grand mean
+                 + ... +
+                #fac1-leveln-replicates * squared difference between factor1-leveln mean and grand mean
+                * #levels.fac2 * ... * #levels.facm
+
+                + ... +
+
+                #factorm-level1-replicates * squared difference between factorm-level1 mean and grand mean
+                 + ... +
+                #facm-levelp-replicates * squared difference between factorm-levelp mean and grand mean
+
+                +
+
+                # replicates-factor1-factor2
+
+
+
+
+    hypotheses:
+      H0: All individual batch means are equal. 
+      Ha: At least one batch mean is not equal to the others.
+        
+
+This F-test is known to be extremely sensitive to non-normality,[2][3] so Levene's test, Bartlett's test, or the Brown–Forsythe test are better tests for testing the equality of two variances. (However, all of these tests create experiment-wise type I error inflations when conducted as a test of the assumption of homoscedasticity prior to a test of effects.[4]) F-tests for the equality of variances can be used in practice, with care, particularly where a quick check is required, and subject to associated diagnostic checking: practical text-books[5] suggest both graphical and formal checks of the assumption.
+
+F-tests are used for other statistical tests of hypotheses, such as testing for differences in means in three or more groups, or in factorial layouts. These F-tests are generally not robust when there are violations of the assumption that each population follows the normal distribution, particularly for small alpha levels and unbalanced layouts.[6] However, for large alpha levels (e.g., at least 0.05) and balanced layouts, the F-test is relatively robust, although (if the normality assumption does not hold) it suffers from a loss in comparative statistical power as compared with non-parametric counterparts.
+
+
+The error term is important because it gives us a “yard stick” with which to measure the variability cause by the A effect.  We want to make sure that the variability attributable to A is greater than the naturally occurring variability (error)
+
+
+REFERENCES
+    http://www.itl.nist.gov/div898/handbook/eda/section3/eda355.htm
+
+
+
+
+TukeyHSD
+    - Tukey's HSD test works through defining a value known as the Honest Significant Difference (HSD). This value is a number that acts as a distance between groups. It is calculated by the following procedure. Divide the mean squared error within from the ANOVA analysis by the total number of data points for a given group. Take the square root of the resulting value. Finally, multiply this result by the studentized range statistic (you can look up this statistic in a table provided by virtually every experimental design textbook). This result is the Honest Significant Difference, and it represents the minimum distance between two group means that must exist before the difference between the two groups is to be considered statistically significant.
+
+
+Constrasts
+    - linear combination of variables where the coefficients sum to 1
+    - two contrasts are called orthogonal if the linear combination of their coefficients 
+    sum to zero.
+
+
+nonparametric regression (loess)
+    
+
+
+"The combination of some data and an aching desire for an answer does not ensure that a reasonable answer can be extracted from a given body of data." * John Tukey
+
+
+
+
+ANOVA
+      E[Y|x1, x2] = f(x1, x2) = alpha + beta1 * x1 + beta2 * x2
+        y ~ N(alpha + beta1 * x1 + beta2 * x2, sigma^2)
+
+
+    Factorial design
+        interaction
+        interaction plots
+        if p-values of interaction terms are not significant, remove them, and rerun the model
+        unit treatment additivity:
+            every treatment has exactly the same additive effect on each experimental unit
+        testing if interaction is important
+        If interaction terms are signifcant, then ignore importance of individual components
+    glm
+        dummy coding
+        effect coding
+
+        Fixed-effects model
+        Cell means model
+    Hypotheses:
+        Type I
+        Type II
+        Type III
+    Assumptions:
+        distribution of the residuals of model are an estimate of the distribution of the error inherent in the model
+        normally distributed residuals, normally distributed response
+
+        residuals are bias estimates of error, must studentize before comparing them
+
+
+
+
+Shrinkage models
+    Ridge regression
+    LASSO
+    Elastic net
+
+    compared to best subset regression and stepwise regression
+            
+            stepwise:
+                forward selection
+                backward selection
+            best subset compares all possible models of every possible number of parameters and presents 
+            the best fitting models that contain one predictor, two predictors, and so on. You have to then
+            compare the best of each and select the one you want.
+
+            Both these methods are discrete, they either keep or discard a factor
+            step-wise has dependence on the path chosen through the variable space and may be inconsistent
+
+
+
+
+
+

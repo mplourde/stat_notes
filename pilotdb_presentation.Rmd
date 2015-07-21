@@ -1,0 +1,108 @@
+---
+title: "PilotDB"
+author: "Matthew Plourde"
+date: "Thursday, July 16, 2015"
+output: ioslides_presentation
+---
+
+## Data Sources
+
+- **GSI Monitoring Data**
+\\\\pwdhqr\\oows\\Watershed Sciences\\GSI Monitoring\\Monitoring Database\\GSI Monitoring Sites
+- **Radar Rainfall**
+\\\\pwdhqr\\oows\\Modeling\\Data\\H&H Databases\\RadarRainfall\\Data
+- **Pilot Framework Matrix**
+\\pwdhqr\\OOWS\\Green Infrastructure\\07 Pilot & Research\\10 Pilot Program\\01 Pilot Program Framework\\Pilot Framework Matrix_150715_emm.xlsx
+(Work sheet: Master Pilot Matrix)
+- **System spatial coordinates**
+GSI_Hydraulic_ID shapefile (Server source?)
+- **Climate data**
+NOAA reports (server source?)
+
+When updating the database, copy these data sources to your local machine and process them with the functions available in the pilotdb R package.
+
+## System requirements
+
+- **Development** git, R, PostgreSQL 9.3
+- **Production** AWS EC2, Ubuntu Linux, git, R, PostgreSQL 9.3
+  
+AWS requires an account, which can be acquired through Paul Fugazzotto
+
+## AWS
+- hhmodeling_webserver is the instance that PilotDB runs on
+- You can connect to this using PuTTY (look up AWS's PuTTY instructions)
+- Requires an authentication key file (which I can give to you)
+- Use PuTTY to connect to the instance terminal
+- use pscp to transfer files from your machine to server
+- use aws s3 to transfer files from instance to s3 storage
+- use pg_dump to save database as flat file for transferring
+- Refer to document at http://oow.github.io/pilotprogram/ for how to set up a fresh instance for PilotDB
+
+## The local option
+- AWS is not necessary for PilotDB
+- the interface can be installed locally on each workstation and can connect to a copy of the database on the PWD network.
+- Downsides: every time PilotDB package updates, each user has to reinstall
+- Upsides: doesn't require investment in learning AWS
+
+
+## Updating AWS PilotDB
+(see notes)
+
+
+## Data management 
+
+**database_setup/database_setup.sql**
+  defines the PilotDB database tables, stored procedures, permissions, and triggers
+
+**R/initialize_pilotdb.r**
+  initialize_pilotdb creates a new instance of the PilotDB database and runs the following procedures.
+  
+**R/update_design_metrics_and_variables.r**
+  update_design_metrics_and_variables takes PilotDB connection and path to Pilot Matrix, adds new systems and updates
+  design metrics and variables for existing systems
+
+**R/update_all_meter.r**
+  update_all_meter_data takes a database connection and paths to datasources and updates
+  
+  
+## Data management (continued)
+**R/load_srt_data.r**
+  load_srt_data takes a PilotDB connection and the path to GSI monitoring folder and scans all systems for SRT events.
+  
+**R/add_ow.r**
+  takes a connection, systemid ID of existing system, and systemid of new system
+  
+**R/update_systems_latlng.r**
+  update all system spatial coordinates
+  
+**R/updates.r**
+  stores all patches executed to update the database
+  
+## Analysis
+
+**R/define_system_events.r**
+  defines or redefines events for system over a certain period of time
+  
+**R/generate_event_stats.r**
+  updates event metrics for a particular system/event
+  
+**R/rerun_stats.r**
+  updates event metrics for all events for all systems or a subset of systems
+  
+**R/make_event_plot.r**
+  creates the timeseries plot for a particular event in a system
+  
+## Interface
+
+**inst/pilotdb_app/www**
+  contains javascript dependencies for PilotDB interface
+  
+**inst/pilotdb/ui.r**
+  definition of parent interface. components of interface are then generated in server.r
+  
+**inst/pilotdb/server.r**
+  contains just about everything that is the PilotDB interface
+
+**inst/pilotdb/global.r**
+  contains various functions used in server.r
+  
