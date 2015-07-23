@@ -13,6 +13,7 @@ What type of analysis are we doing?
         so we must consider using Type II or Type III
         -balanced replicates are needed for accurate grand mean, if unequal sizes, then the grand mean 
         won't be effected equally by all of the treatment groups
+    pseudo replication
 Models:
     Linear models
         Discrete, all or nothing models:

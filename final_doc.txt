@@ -39,25 +39,49 @@ the engineer may then want to provide a non-statistical explanation to make clai
 
 ## Discreate, all-or-nothing models
 
-### Step-wise 
+### Step-wise regression
 
 The `step` function in R implements stepwise variable elimination using the Akaike Information Criterion (AIC). 
 Given a set of available models, the preferred model is the one with the lowest AIC. At each stage in the optimal model search, 
 `step` adds and deletes variables from the model with the aim to minimize the AIC. You stop when you can no longer lower
-the AIC, or reach the max number of iterations. AIC penalizes adding terms to the model in order to avoid overfitting 
-the data.
+the AIC, or reach the max number of iterations. AIC penalizes adding terms to the model to avoid overfitting 
+the data. For small sample sizes (that is, when sample size divided by the number of parameters is less than or equal to
+40), you should use the corrected AIC, AICc.
 
-For small sample sizes, you should uses AICc (sample size / num params < ~40)
+### All possible subsets regression
+
+This approach to choosing a regression model considers all possible models and selects the best one parameter model, the
+best two parameter model, the best three parameter model, etc. Best is determined by using some measure of model
+performance, largest adjusted R^2 (regular R^2 penalized for the number of parameters in the
+model. This should be used instead of regular R^2, since unadjusted R^2 will increase with the number of parameters in
+the model), smallest MSE, or Mallow's Cp statistic. Different measures of model performance may result in different 
+"best" models. One should be careful not to claim that this procedure produces the "best model" in a global sense, but
+rather think of this regression building process as a screening process. After the "best" models for each number of
+parameters are distilled, specialist insight should be used to select the final model.
+
+Mallows Cp statistic estimates the size of the bias that is introduced into the predicted responses by having an 
+underspecified model.
+
+Mallow's Cp has been shown to be equivalent to AIC in the special case of Gaussian linear regression.
+
+Mallow's Cp calculated on a sample of data estimates the Mean Squared Prediction Error (MSPE) 
+
+MSPE = E[Sum_j (yhatj - mu_yj|xj)^2 / sigma^2], where sigma^2 is the error variance. MSPE will not get smaller as more
+variables are added. 
+
+Limits of Mallow's Cp: 
+    approximation is only valid for large sample sizes
+    cannot handle complex collectinos of models as in the variable selection problem
+
+
 
     1. Variables are either included in the model or not. There is no inbetween. Because of this, the effects 
-    of the chosen variables may be over estimated. Loses valuable predictive information in excluded variables.
-    2. The validity of the resulting p-values is questionable, because there is multiple testing occuring. Removal
-    of less significant predictors tends to increase the significance of others, leading to an over statement
-    of the chosen predictors.
+    of the chosen variables may be over estimated. You may lose valuable predictive information in excluded variables.
 
 The p-values used should not be treated too literally. There is so much multiple testing occurring that
 the validity is dubious. The removal of less significant predictors tends to increase the significance of
 the remaining predictors. This effect leads one to overstate the importance of the remaining predictors.
+
     1. bias in parameter estimation
     2. inconsistency among model selection algorithms
     3. inherent problem of multiple hypothesis testing

@@ -92,6 +92,9 @@ method='lmStepAIC' to get crossvalidated stepAIC
 method='glmStepAIC'
 caret::findCorrelation to identify and eliminate collinear variables
 
+step function uses extractAIC to get the AIC. consider modifying extractAIC (getAnyhere(extractAIC.lm)) to uses AICc in
+small sample size situations.
+
 
 ANOVA assumptions
     - independence, normality, and homogeneity of varainces of the residuals (as a consequence of unit treatment
