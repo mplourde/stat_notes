@@ -13,20 +13,20 @@ inlet type), and a set of N independent observations of Y, we want to identify l
 effect on the value of Y. This process is called feature selection. One
 way to approach this problem is to build a statistical model that provides significance scores for each feature. 
 We would then use statistical significance as our measure of importance and select only those features that are 
-highly significant according to some threshold. A more robust approach would be to build several models 
+highly significant (according to some threshold). A more robust approach would be to build several models 
 that provide independent importance rankings of the features, then weight the models by their predictive accuracy and use this 
-combined information to inform an educated human decision about which features should ultimately be chosen. Evaluating
+combined information to inform an educated human decision about which features should be chosen. Evaluating
 a model's predictive accuracy is a way to establish the trust-worthiness of its feature ranking. We determine model's
 trust-worthiness by first training the model on
 only a subset of the data and then evaluating its predictive accuracy on the other part. If several trust-worthy models select the same features, then we can be confident that these features 
-are indeed important. In this
-document, I will describe several statistical models that can be used toward this end, their relative merits, and the nuances involved in applying these models to particular data situations.
+are important. In this
+document, I will describe several statistical models that can be used toward the end of feature selection, their relative merits, and the nuances involved in applying these models to particular data situations.
 
 # What type of analysis are we performing?
 
 Any statistical analysis of the GSI monitoring data will constitute an observational study. The monitored GSI systems were not
 randomly selected from all possible GSI systems in the Philadelphia area nor were the levels of the features randomly assigned to the 
-systems chosen.  This limits the 
+systems chosen. This limits the 
 scope of what can be inferred from any analysis using this data. Without randomly
 selecting systems from all possible systems, the statistics alone will not allow us to generalize the results to all GSI
 systems in Philadelphia. Moreover, because the feature levels were not randomly assigned to the sampled systems, we cannot rule out
@@ -57,7 +57,32 @@ model. This should be used instead of regular R^2, since unadjusted R^2 will inc
 the model), smallest MSE, or Mallow's Cp statistic. Different measures of model performance may result in different 
 "best" models. One should be careful not to claim that this procedure produces the "best model" in a global sense, but
 rather think of this regression building process as a screening process. After the "best" models for each number of
-parameters are distilled, specialist insight should be used to select the final model.
+parameters are distilled, specialist insight should be used to select the final model. You can use the leaps function 
+from the leaps package in R to perform all possible subset regression. The idea is for each number of parameters,
+identify the model that has the Cp closest to the number of parameters.
+
+
+## Continuous, shrinkage models
+
+Unlike the all-or-nothing models, shrinkage models constrain the magnitude the parameter coefficients:w
+
+
+## LASSO regression
+
+
+
+
+
+Cp estimates Gamma_p = 1/sigma^2 {Sum_i_n sigma_yhat_i_^2   +   Sum_i_n [E(yhat_i) - E(y_i)]^2}
+division by sigma^2 is to get a standardized unitless measure, since the size of the bias depends
+on the measurement units used. The first term is the variance term, the second 
+term is the bias term. If there is no bias in the predicted reponse, then Gamma_p = p, the number of parameters in the 
+model. Because Gamma_p quantifies the amount of bias and variance in the predicted response, Gamma_p seems
+to be a good measure of an underspecified model. The best model is the one with the smallest value of Gamma_p, and
+the lowest this can be is the number of parameters.
+
+If the model fits the data well, then the expected value of the Cp is approximately equal to the number of parameters in
+the model
 
 Mallows Cp statistic estimates the size of the bias that is introduced into the predicted responses by having an 
 underspecified model.
@@ -66,13 +91,18 @@ Mallow's Cp has been shown to be equivalent to AIC in the special case of Gaussi
 
 Mallow's Cp calculated on a sample of data estimates the Mean Squared Prediction Error (MSPE) 
 
-MSPE = E[Sum_j (yhatj - mu_yj|xj)^2 / sigma^2], where sigma^2 is the error variance. MSPE will not get smaller as more
-variables are added. 
+MSPE will not get smaller as more variables are added. 
+
+Cp estimates MPSE. For a subset of k predictors from the full set of p predictors, the estimate of 
 
 Limits of Mallow's Cp: 
     approximation is only valid for large sample sizes
     cannot handle complex collectinos of models as in the variable selection problem
 
+
+Bias in predicted response B_i = E(yhat_i) - E(y_i)
+
+Gamma_p = 
 
 
     1. Variables are either included in the model or not. There is no inbetween. Because of this, the effects 

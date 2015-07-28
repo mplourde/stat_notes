@@ -4,6 +4,7 @@ Feature Selection:
     Examine several models that filter out non-important features
     Establish trust-worthiness of individual model feature selections by testing accuracy of model on test set
     Establish confidence in final feature selection by combining results of trust-worthy models
+    Initially, features that have no bearing on the response according to some expert's opinion should be eliminated
 What type of analysis are we doing?
     observational study: no experimental design
     non-random selection of samples -> not generalizable
